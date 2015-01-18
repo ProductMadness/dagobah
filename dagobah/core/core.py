@@ -113,17 +113,24 @@ class Dagobah(object):
                   else self.backend.get_new_job_id())
         self.add_job(str(job_json['name']), job_id)
         job = self.get_job(job_json['name'])
+        job.run_log = deepcopy(job_json)
+        job.run_log['log_id'] = self.backend.get_new_log_id() - 1
+        job.run_log['tasks'] = {}
         if job_json.get('cron_schedule', None):
             job.schedule(job_json['cron_schedule'])
 
         for task in job_json.get('tasks', []):
+            success = True if task.get('success') == '1' else None if task.get('success') is None else False
+            job.run_log['tasks'][task['name']] = {'success': success}
             self.add_task_to_job(job,
                                  str(task['command']),
                                  str(task['name']),
                                  soft_timeout=task.get('soft_timeout', 0),
                                  hard_timeout=task.get('hard_timeout', 0),
-                                 hostname=task.get('hostname', None))
-
+                                 hostname=task.get('hostname', None),
+                                 started_at=task.get('started_at'),
+                                 completed_at=task.get('completed_at'),
+                                 successful=success)
         dependencies = job_json.get('dependencies', {})
         for from_node, to_nodes in dependencies.iteritems():
             for to_node in to_nodes:
@@ -447,7 +454,6 @@ class Job(DAG):
 
         self._set_status('running')
         self.run_log['last_retry_time'] = datetime.utcnow()
-
         logger.debug('Job {0} seeding run logs'.format(self.name))
         for task_name in failed_task_names:
             self._put_task_in_run_log(task_name)
@@ -720,7 +726,8 @@ class Task(object):
     """
 
     def __init__(self, parent_job, command, name,
-                 soft_timeout=0, hard_timeout=0, hostname=None):
+                 soft_timeout=0, hard_timeout=0, hostname=None,
+                 started_at=None, completed_at=None, successful=None):
         logger.debug('Starting Task instance constructor with name {0}'.format(name))
         self.parent_job = parent_job
         self.backend = self.parent_job.backend
@@ -738,9 +745,9 @@ class Task(object):
 
         self.timer = None
 
-        self.started_at = None
-        self.completed_at = None
-        self.successful = None
+        self.started_at = started_at
+        self.completed_at = completed_at
+        self.successful = successful
 
         self.terminate_sent = False
         self.kill_sent = False

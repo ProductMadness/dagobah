@@ -164,7 +164,6 @@ class SQLiteBackend(BaseBackend):
         self.session.commit()
 
     def commit_log(self, log_json):
-
         rec = self.session.query(DagobahLog).\
             filter_by(id=log_json['log_id']).\
             first()
@@ -185,6 +184,17 @@ class SQLiteBackend(BaseBackend):
         self.session.flush()
 
         for task_name, task_data in log_json.get('tasks', {}).iteritems():
+
+            taskModel = self.session.query(DagobahTask).\
+                filter_by(name=task_name).\
+                first()
+
+            if taskModel:
+                task_json = deepcopy(task_data)
+                task_json.setdefault('success', None)
+                task_json['started_at'] = task_json.get('start_time', None)
+                task_json['completed_at'] = task_json.get('complete_time', None)
+                taskModel.update_from_dict(task_json)
 
             existing = self.session.query(DagobahLogTask).\
                 filter_by(log_id=rec.id).\
