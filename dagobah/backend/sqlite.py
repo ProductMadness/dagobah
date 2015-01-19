@@ -192,8 +192,8 @@ class SQLiteBackend(BaseBackend):
             if taskModel:
                 task_json = deepcopy(task_data)
                 task_json.setdefault('success', None)
-                task_json['started_at'] = task_json.get('start_time', None)
                 task_json['completed_at'] = task_json.get('complete_time', None)
+                task_json['started_at'] = task_json['completed_at'] and task_json.get('start_time', None)
                 taskModel.update_from_dict(task_json)
 
             existing = self.session.query(DagobahLogTask).\
