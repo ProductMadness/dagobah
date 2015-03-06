@@ -808,9 +808,11 @@ class Task(object):
             else:
                 self.remote_failure = True
         else:
+            env = os.environ.copy()
+            env['job_id'] = str(self.parent_job.job_id)
             self.process = subprocess.Popen(self.command,
                                             shell=True,
-                                            env=os.environ.copy(),
+                                            env=env,
                                             stdout=self.stdout_file,
                                             stderr=self.stderr_file)
 
