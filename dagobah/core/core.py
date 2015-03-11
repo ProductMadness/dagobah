@@ -797,6 +797,8 @@ class Task(object):
         self.kill_sent = False
         self.remote_failure = False
 
+        self.backend.reset_task(self.parent_job, self)
+
     def start(self):
         """ Begin execution of this task. """
         logger.info('Starting task {0}'.format(self.name))

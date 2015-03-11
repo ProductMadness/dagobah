@@ -186,15 +186,21 @@ class SQLiteBackend(BaseBackend):
         for task_name, task_data in log_json.get('tasks', {}).iteritems():
 
             taskModel = self.session.query(DagobahTask).\
+                filter_by(job_id=log_json['job_id']).\
                 filter_by(name=task_name).\
                 first()
 
             if taskModel:
-                task_json = deepcopy(task_data)
-                task_json.setdefault('success', None)
-                task_json['started_at'] = task_json.get('start_time', None)
-                task_json['completed_at'] = task_json.get('complete_time', None)
-                taskModel.update_from_dict(task_json)
+                if task_data.get('start_time'):
+                    task_json = deepcopy(task_data)
+                    if task_json.get('complete_time'):
+                        task_json['completed_at'] = task_json.get('complete_time', None)
+                    else:
+                        task_json['success'] = False
+                        task_json['completed_at'] = task_json.get('start_time', None)
+                    task_json.setdefault('success', None)
+                    task_json['started_at'] = task_json.get('start_time', None)
+                    taskModel.update_from_dict(task_json)
 
             existing = self.session.query(DagobahLogTask).\
                 filter_by(log_id=rec.id).\
@@ -237,6 +243,22 @@ class SQLiteBackend(BaseBackend):
             return result
         else:
             return None
+
+    def reset_task(self, job, task):
+
+        cleaned_task = {
+            'success': None,
+            'started_at': None,
+            'completed_at': None
+        }
+
+        taskModel = self.session.query(DagobahTask).\
+            filter_by(job_id=job.job_id).\
+            filter_by(name=task.name).\
+            first()
+
+        taskModel.update_from_dict(cleaned_task)
+        self.session.commit()
 
     def acquire_lock(self):
         self.lock.acquire()
