@@ -51,7 +51,7 @@ def api_call(fn):
             raise e
         except Exception as e:
             logging.exception(e)
-            raise
+            raise e
 
         if request and request.endpoint == fn.__name__:
             status_code = None
