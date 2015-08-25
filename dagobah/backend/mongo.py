@@ -40,15 +40,13 @@ class MongoBackend(BaseBackend):
         self.mongo_user = mongo_user
         self.mongo_password = mongo_password
 
-        try:
-            self.client = MongoClient(self.host, self.port)
-        except NameError:
-            self.client = Connection(self.host, self.port)
-
         if self.mongo_user and self.mongo_password:
-            self.client.the_database.authenticate(self.mongo_user,
-                                  self.mongo_password,
-                                  source=self.db_name)
+                self.client = MongoClient('mongodb://{}:{}@{}:{}/'.format(mongo_user, mongo_password, host, port))
+        else:
+            try:
+                self.client = MongoClient(self.host, self.port)
+            except NameError:
+                self.client = Connection(self.host, self.port)
 
         self.db = self.client[self.db_name]
 
