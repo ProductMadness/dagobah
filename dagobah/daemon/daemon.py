@@ -246,7 +246,7 @@ def get_backend(config):
 
     elif backend_string.lower() == 'mongo':
         backend_kwargs = {}
-        for conf_kwarg in ['host', 'port', 'db',
+        for conf_kwarg in ['host', 'port', 'db', 'mongo_user', 'mongo_password',
                            'dagobah_collection', 'job_collection',
                            'log_collection']:
             backend_kwargs[conf_kwarg] = get_conf(config,
