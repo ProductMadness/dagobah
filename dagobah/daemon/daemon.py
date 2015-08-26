@@ -144,10 +144,9 @@ def get_conf(config, path, default=None):
         current = current[level]
 
     try:
-        logging.debug('Trying to find env variable for {}'.format(path))
         env_variable_name = CONFIG_KEYS_WITH_ENV_VARIABLES[path]
-        logging.debug('Name of env variable is {}'.format(env_variable_name))
-        return current.replace('{{{}}}}'.format(str(os.getenv(env_variable_name))))
+        # We don't use {} for variables in the config file to avoid issues with the yaml module.
+        return current.replace('${}'.format(env_variable_name), str(os.getenv(env_variable_name)))
     except:
         return current
 
