@@ -41,7 +41,8 @@ class MongoBackend(BaseBackend):
         self.mongo_password = mongo_password
 
         if self.mongo_user and self.mongo_password:
-                self.client = MongoClient('mongodb://{}:{}@{}:{}/'.format(mongo_user, mongo_password, host, port))
+                self.client = MongoClient('mongodb://{}:{}@{}:{}/{}'.format(self.mongo_user, self.mongo_password,
+                                                                            self.host, self.port, self.db_name))
         else:
             try:
                 self.client = MongoClient(self.host, self.port)
