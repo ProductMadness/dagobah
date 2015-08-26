@@ -20,6 +20,12 @@ login_manager.login_view = "login"
 location = os.path.realpath(os.path.join(os.getcwd(),
                                          os.path.dirname(__file__)))
 
+CONFIG_KEYS_WITH_ENV_VARIABLES = {'MongoBackend.host': 'DAGOBAH_MONGO_HOST',
+                                  'MongoBackend.port': 'DAGOBAH_MONGO_PORT',
+                                  'MongoBackend.db': 'DAGOBAH_MONGO_DB',
+                                  'MongoBackend.mongo_user': 'DAGOBAH_MONGO_USER',
+                                  'MongoBackend.mongo_password': 'DAGOBAH_MONGO_PASSWORD'}
+
 class NullHandler(logging.Handler):
     def emit(self, record):
         pass
@@ -136,7 +142,12 @@ def get_conf(config, path, default=None):
             logging.warning(msg)
             return default
         current = current[level]
-    return current
+
+    try:
+        return current.replace('{{{}}}}'.format(CONFIG_KEYS_WITH_ENV_VARIABLES[path],
+                                                os.getenv(CONFIG_KEYS_WITH_ENV_VARIABLES[path])))
+    except:
+        return current
 
 
 def init_dagobah(testing=False):
