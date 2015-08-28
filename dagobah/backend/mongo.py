@@ -18,8 +18,8 @@ except ImportError:
 from dateutil import parser
 from ..backend.base import BaseBackend
 
-TRUNCATE_LOG_SIZES_CHAR = {'stdout': 500000,
-                           'stderr': 500000}
+TRUNCATE_LOG_SIZES_CHAR = {'stdout': 5000000,
+                           'stderr': 5000000}
 
 
 class MongoBackend(BaseBackend):
