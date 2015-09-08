@@ -153,17 +153,17 @@ class MongoBackend(BaseBackend):
                     task['success'] = False
                     task['completed_at'] = log_task.get('start_time')
 
-        self.dagobah_coll.update_one({'jobs.job_id': log_json['job_id']},
-                                     {'$set': {'jobs.$.tasks': job_tasks}})
+        self.dagobah_coll.find_one_and_update({'jobs.job_id': log_json['job_id']},
+                                              {'$set': {'jobs.$.tasks': job_tasks}})
 
     def reset_task(self, job, task):
         graph = self.dagobah_coll.find_one({'jobs.job_id': job.job_id})
         tasks = [a for a in graph.get('jobs', []) if a['job_id'] == job.job_id][0]
         task_index = [i for i, a in enumerate(tasks['tasks']) if a['name'] == task.name][0]
-        self.dagobah_coll.update_one({'jobs.job_id': job.job_id},
-                                     {'$set': {'jobs.$.tasks.{}.completed_at'.format(task_index): None,
-                                               'jobs.$.tasks.{}.started_at'.format(task_index): None,
-                                               'jobs.$.tasks.{}.success'.format(task_index): None}})
+        self.dagobah_coll.find_one_and_update({'jobs.job_id': job.job_id},
+                                              {'$set': {'jobs.$.tasks.{}.completed_at'.format(task_index): None,
+                                                        'jobs.$.tasks.{}.started_at'.format(task_index): None,
+                                                        'jobs.$.tasks.{}.success'.format(task_index): None}})
 
     def get_latest_run_log(self, job_id, task_name):
         q = {'job_id': ObjectId(job_id),
