@@ -120,9 +120,14 @@ class Dagobah(object):
             self.add_task_to_job(job,
                                  str(task['command']),
                                  str(task['name']),
+                                 started_at=task.get('started_at'),
+                                 completed_at=task.get('completed_at'),
+                                 successful=task.get('success'),
                                  soft_timeout=task.get('soft_timeout', 0),
                                  hard_timeout=task.get('hard_timeout', 0),
                                  hostname=task.get('hostname', None))
+            if task.get('success') == False:
+                job.run_log['tasks'][task['name']] = task
 
         dependencies = job_json.get('dependencies', {})
         for from_node, to_nodes in dependencies.iteritems():
@@ -299,7 +304,12 @@ class Job(DAG):
         self.next_run = None
         self.cron_schedule = None
         self.cron_iter = None
-        self.run_log = None
+        self.run_log = {'job_id': self.job_id,
+                        'name': self.name,
+                        'parent_id': self.parent.dagobah_id,
+                        'log_id': self.backend.get_new_log_id(),
+                        'start_time': datetime.utcnow(),
+                        'tasks': {}}
         self.completion_lock = threading.Lock()
         self.notes = None
 
@@ -720,7 +730,7 @@ class Task(object):
     """
 
     def __init__(self, parent_job, command, name,
-                 soft_timeout=0, hard_timeout=0, hostname=None):
+                 soft_timeout=0, hard_timeout=0, hostname=None, started_at=None, completed_at=None, successful=None):
         logger.debug('Starting Task instance constructor with name {0}'.format(name))
         self.parent_job = parent_job
         self.backend = self.parent_job.backend
@@ -738,9 +748,9 @@ class Task(object):
 
         self.timer = None
 
-        self.started_at = None
-        self.completed_at = None
-        self.successful = None
+        self.started_at = started_at
+        self.completed_at = completed_at
+        self.successful = successful
 
         self.terminate_sent = False
         self.kill_sent = False
@@ -790,6 +800,8 @@ class Task(object):
         self.kill_sent = False
         self.remote_failure = False
 
+        self.backend.reset_task(self.parent_job, self)
+
     def start(self):
         """ Begin execution of this task. """
         logger.info('Starting task {0}'.format(self.name))
@@ -801,9 +813,11 @@ class Task(object):
             else:
                 self.remote_failure = True
         else:
+            env = os.environ.copy()
+            env['job_id'] = str(self.parent_job.job_id)
             self.process = subprocess.Popen(self.command,
                                             shell=True,
-                                            env=os.environ.copy(),
+                                            env=env,
                                             stdout=self.stdout_file,
                                             stderr=self.stderr_file)
 
