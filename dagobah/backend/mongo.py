@@ -141,6 +141,30 @@ class MongoBackend(BaseBackend):
                                                  values[key][-1 * (size/2):]])
         self.log_coll.save(dict(log_json.items() + append.items()))
 
+        log_tasks = log_json['tasks']
+        job_tasks = self.dagobah_coll.find_one({'jobs.job_id': log_json['job_id']})['jobs'][0]['tasks']
+        for task in job_tasks:
+            if task['name'] in log_tasks:
+                log_task = log_tasks[task['name']]
+                task['success'] = log_task.get('success')
+                task['started_at'] = log_task.get('start_time')
+                task['completed_at'] = log_task.get('complete_time')
+                if log_task.get('start_time') and not log_task.get('complete_time'):
+                    task['success'] = False
+                    task['completed_at'] = log_task.get('start_time')
+
+        self.dagobah_coll.update({'jobs.job_id': log_json['job_id']},
+                                 {'$set': {'jobs.$.tasks': job_tasks}})
+
+    def reset_task(self, job, task):
+        graph = self.dagobah_coll.find_one({'jobs.job_id': job.job_id})
+        tasks = [a for a in graph.get('jobs', []) if a['job_id'] == job.job_id][0]
+        task_index = [i for i, a in enumerate(tasks['tasks']) if a['name'] == task.name][0]
+        self.dagobah_coll.update({'jobs.job_id': job.job_id},
+                                 {'$set': {'jobs.$.tasks.{}.completed_at'.format(task_index): None,
+                                  'jobs.$.tasks.{}.started_at'.format(task_index): None,
+                                  'jobs.$.tasks.{}.success'.format(task_index): None}})
+
     def get_latest_run_log(self, job_id, task_name):
         q = {'job_id': ObjectId(job_id),
              'tasks.%s' % task_name: {'$exists': True}}
