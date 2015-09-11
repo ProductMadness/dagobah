@@ -142,7 +142,7 @@ class MongoBackend(BaseBackend):
         self.log_coll.save(dict(log_json.items() + append.items()))
 
         log_tasks = log_json['tasks']
-        job_tasks = self.dagobah_coll.find_one({'jobs.job_id': log_json['job_id']})['jobs'][0]['tasks']
+        job_tasks = self.dagobah_coll.find_one({'jobs.job_id': log_json['job_id']}, {'jobs.$': 1})['jobs'][0]['tasks']
         for task in job_tasks:
             if task['name'] in log_tasks:
                 log_task = log_tasks[task['name']]
@@ -157,7 +157,7 @@ class MongoBackend(BaseBackend):
                                  {'$set': {'jobs.$.tasks': job_tasks}})
 
     def reset_task(self, job, task):
-        graph = self.dagobah_coll.find_one({'jobs.job_id': job.job_id})
+        graph = self.dagobah_coll.find_one({'jobs.job_id': job.job_id}, {'jobs.$': 1})
         tasks = [a for a in graph.get('jobs', []) if a['job_id'] == job.job_id][0]
         task_index = [i for i, a in enumerate(tasks['tasks']) if a['name'] == task.name][0]
         self.dagobah_coll.update({'jobs.job_id': job.job_id},
