@@ -14,7 +14,8 @@ class EmailTemplate(object):
         self.location = os.path.realpath(os.path.join(os.getcwd(),
                                                       os.path.dirname(__file__)))
 
-        self.formatters = {'{HOSTNAME}': socket.gethostname}
+        self.formatters = {'{HOSTNAME}': socket.gethostname,
+                           '{ENVIRONMENT_NAME}': os.getenv('ENVIRONMENT_NAME', '')}
         for kwarg, value in kwargs.iteritems():
             setattr(self, kwarg, value)
         self.from_address = self._apply_formatters(self.from_address)
