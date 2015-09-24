@@ -15,7 +15,7 @@ class EmailTemplate(object):
                                                       os.path.dirname(__file__)))
 
         self.formatters = {'{HOSTNAME}': socket.gethostname,
-                           '{ENVIRONMENT_NAME}': os.getenv('ENVIRONMENT_NAME', '')}
+                           '{ENVIRONMENT_NAME}': lambda: os.getenv('ENVIRONMENT_NAME', '')}
         for kwarg, value in kwargs.iteritems():
             setattr(self, kwarg, value)
         self.from_address = self._apply_formatters(self.from_address)
