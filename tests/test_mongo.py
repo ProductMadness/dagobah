@@ -132,7 +132,8 @@ class TestMongo(object):
                                  'status': 'waiting',
                                  'cron_schedule': None,
                                  'next_run': None,
-                                 'notes': None}]}
+                                 'notes': None,
+                                 'successful_email': None}]}
 
 
     def test_commit_job(self):
@@ -166,7 +167,8 @@ class TestMongo(object):
                        'cron_schedule': None,
                        'next_run': None,
                        'save_date': rec['save_date'],
-                       'notes': None}
+                       'notes': None,
+                       'successful_email': None}
 
 
     def test_construct_from_backend(self):

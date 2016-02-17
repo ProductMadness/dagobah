@@ -315,6 +315,8 @@ class Job(DAG):
 
         self.snapshot = None
 
+        self.successful_email = None
+
         self._set_status('waiting')
 
         self.commit()
@@ -694,7 +696,8 @@ class Job(DAG):
                   'status': self.state.status,
                   'cron_schedule': self.cron_schedule,
                   'next_run': self.next_run,
-                  'notes': self.notes}
+                  'notes': self.notes,
+                  'successful_email': self.successful_email}
 
         if strict_json:
             result = json.loads(json.dumps(result, cls=StrictJSONEncoder))

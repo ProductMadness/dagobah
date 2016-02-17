@@ -162,3 +162,6 @@ class BaseBackend(object):
 
     def release_lock(self):
         return
+
+    def reset_task(self, job, task):
+        pass

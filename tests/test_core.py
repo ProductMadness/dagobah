@@ -232,7 +232,8 @@ def test_serialize_dagobah():
                              'status': 'waiting',
                              'cron_schedule': '*/5 * * * *',
                              'next_run': datetime(2012, 1, 1, 1, 5, 0),
-                             'notes': 'Here are some notes'}]}
+                             'notes': 'Here are some notes',
+                             'successful_email': None}]}
     print dagobah._serialize()
     print test_result
     assert_equal(dagobah._serialize(), test_result)

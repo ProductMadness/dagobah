@@ -12,6 +12,9 @@ class BasicEmail(EmailTemplate):
 
     def send_job_completed(self, data):
 
+        if data['successful_email'] is False:
+            return 0
+
         self._format_job_dict(data)
         for task in data.get('tasks', []):
             self._format_task_dict(task)

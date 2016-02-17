@@ -8,6 +8,10 @@ from .common import EmailTemplate
 class TextEmail(EmailTemplate):
 
     def send_job_completed(self, data):
+
+        if data['successful_email'] is False:
+            return 0
+
         self.message = MIMEText(self._job_to_text(data))
         self._construct_and_send('Job Completed: %s' % data.get('name', None))
 
