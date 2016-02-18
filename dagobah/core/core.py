@@ -137,6 +137,10 @@ class Dagobah(object):
         if job_json.get('notes', None):
             job.update_job_notes(job_json['notes'])
 
+        if job_json.get('successful_email', None) is False:
+            job.set_success_email_false()
+
+
 
 
     def commit(self, cascade=False):
@@ -326,6 +330,10 @@ class Job(DAG):
         """ Store metadata on this Job to the backend. """
         logger.debug('Committing job {0}'.format(self.name))
         self.backend.commit_job(self._serialize())
+        self.parent.commit()
+
+    def set_success_email_false(self):
+        self.successful_email = False
         self.parent.commit()
 
 
